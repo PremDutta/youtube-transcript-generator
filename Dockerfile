@@ -31,6 +31,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-EXPOSE 3000
-ENV PORT=3000
+
+# Don't hardcode PORT/EXPOSE — the host (Railway or otherwise) injects its
+# own PORT at runtime, and the standalone server reads process.env.PORT
+# directly. A hardcoded value here previously caused Railway's static
+# Dockerfile inspection to route to the wrong port than the one the
+# container actually bound at runtime.
 CMD ["node", "server.js"]
