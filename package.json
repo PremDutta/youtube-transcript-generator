@@ -1,0 +1,30 @@
+{
+  "name": "youtube-transcript-generator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "openai": "4.55.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.15",
+    "@types/react": "19.1.0",
+    "@types/react-dom": "19.1.0",
+    "autoprefixer": "10.4.19",
+    "eslint": "9.9.0",
+    "eslint-config-next": "16.3.4",
+    "postcss": "8.5.28",
+    "tailwindcss": "3.4.7",
+    "typescript": "5.5.4"
+  }
+}
