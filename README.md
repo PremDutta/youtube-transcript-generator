@@ -43,6 +43,33 @@ brew install ffmpeg
 works for the (large majority of) videos that have captions — it just
 returns a clear error for caption-less videos instead of transcribing them.
 
+## Deployment
+
+**This app does not work on serverless platforms** (Vercel, Netlify
+Functions, Cloudflare Workers/Pages, AWS Lambda) — it shells out to
+`yt-dlp` and `ffmpeg` as system binaries, and serverless runtimes give you
+an ephemeral, sandboxed filesystem with no way to install OS packages at
+runtime. Deploying there will fail with `spawn yt-dlp ENOENT` regardless of
+what's in `package.json`.
+
+Deploy it anywhere that gives you a real container/VM instead — Railway,
+Render, Fly.io, or a plain VPS all work identically via the included
+`Dockerfile`, which installs `yt-dlp` and `ffmpeg` alongside the app:
+
+```bash
+docker build -t yt-transcript .
+docker run -p 3000:3000 --env-file .env.local yt-transcript
+```
+
+For Railway/Render specifically: connect the GitHub repo, and both
+platforms auto-detect the `Dockerfile` and build from it — no extra
+config needed beyond setting `OPENAI_API_KEY` as an environment variable
+if you want the Whisper fallback. Also make sure the platform's request/
+function timeout (if configurable) is comfortably above this app's own
+internal timeouts (`src/lib/transcript/timeouts.ts`, up to 180s for the
+Whisper API call) — a platform-level timeout shorter than that will cut
+off a legitimate long-running request.
+
 ## Features
 
 - **Any language** — detects the video's real caption language via its
