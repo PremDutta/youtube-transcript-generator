@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Copy, Download } from "lucide-react";
 import type { TranscriptSegment } from "@/lib/transcript/types";
 import { toPlainText, toSrt, toVtt } from "@/lib/export";
 
@@ -12,6 +13,9 @@ function download(filename: string, content: string) {
   link.click();
   URL.revokeObjectURL(link.href);
 }
+
+const buttonClass =
+  "inline-flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900/50 px-3 py-1.5 text-xs font-medium text-neutral-300 transition hover:border-neutral-700 hover:bg-neutral-800 hover:text-neutral-50";
 
 export function ExportButtons({
   segments,
@@ -30,28 +34,20 @@ export function ExportButtons({
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button
-        onClick={handleCopy}
-        className="rounded-md border border-neutral-800 px-3 py-1.5 text-xs font-medium hover:bg-neutral-900"
-      >
-        {copied ? "Copied!" : "Copy"}
+      <button onClick={handleCopy} className={buttonClass}>
+        {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+        {copied ? "Copied" : "Copy"}
       </button>
-      <button
-        onClick={() => download(`${baseName}.txt`, toPlainText(segments))}
-        className="rounded-md border border-neutral-800 px-3 py-1.5 text-xs font-medium hover:bg-neutral-900"
-      >
+      <button onClick={() => download(`${baseName}.txt`, toPlainText(segments))} className={buttonClass}>
+        <Download className="h-3.5 w-3.5" />
         .txt
       </button>
-      <button
-        onClick={() => download(`${baseName}.srt`, toSrt(segments))}
-        className="rounded-md border border-neutral-800 px-3 py-1.5 text-xs font-medium hover:bg-neutral-900"
-      >
+      <button onClick={() => download(`${baseName}.srt`, toSrt(segments))} className={buttonClass}>
+        <Download className="h-3.5 w-3.5" />
         .srt
       </button>
-      <button
-        onClick={() => download(`${baseName}.vtt`, toVtt(segments))}
-        className="rounded-md border border-neutral-800 px-3 py-1.5 text-xs font-medium hover:bg-neutral-900"
-      >
+      <button onClick={() => download(`${baseName}.vtt`, toVtt(segments))} className={buttonClass}>
+        <Download className="h-3.5 w-3.5" />
         .vtt
       </button>
     </div>

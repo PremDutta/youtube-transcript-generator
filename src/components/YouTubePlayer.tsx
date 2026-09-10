@@ -91,7 +91,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, { videoId: string }
     );
 
     return (
-      <div className="aspect-video w-full overflow-hidden rounded-lg border border-neutral-800 bg-black">
+      <div className="aspect-video w-full overflow-hidden rounded-2xl border border-neutral-800 bg-black shadow-lg shadow-black/40">
         <div ref={containerRef} className="h-full w-full" />
       </div>
     );
