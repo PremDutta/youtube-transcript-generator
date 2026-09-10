@@ -5,6 +5,9 @@
  * messages stay readable instead of dumping the whole blob.
  */
 export function describeExecError(err: unknown): string {
+  if (err && typeof err === "object" && "code" in err && (err as { code?: string }).code === "ENOENT") {
+    return "yt-dlp is not installed (or not on PATH) on this server. Install it — e.g. `brew install yt-dlp` or `pip install --user yt-dlp` — and restart the server.";
+  }
   if (err && typeof err === "object" && "killed" in err && (err as { killed?: boolean }).killed) {
     return "The command timed out.";
   }

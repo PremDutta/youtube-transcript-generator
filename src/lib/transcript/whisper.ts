@@ -76,12 +76,6 @@ export async function transcribeWithWhisper(videoId: string): Promise<WhisperRes
     };
   } catch (err) {
     if (err instanceof TranscriptUnavailableError) throw err;
-    const code = (err as NodeJS.ErrnoException).code;
-    if (code === "ENOENT") {
-      throw new TranscriptUnavailableError(
-        "yt-dlp is not installed on this server. Install it (e.g. `brew install yt-dlp ffmpeg`) to enable the Whisper fallback."
-      );
-    }
     throw new TranscriptUnavailableError(`Whisper fallback failed: ${describeExecError(err)}`);
   } finally {
     await rm(workDir, { recursive: true, force: true });
