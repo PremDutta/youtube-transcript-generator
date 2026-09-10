@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { METADATA_TIMEOUT_MS } from "./timeouts";
 
 const execFileAsync = promisify(execFile);
 const MAX_METADATA_BUFFER = 20 * 1024 * 1024;
@@ -15,7 +16,7 @@ export async function getVideoMetadata(videoId: string): Promise<VideoMetadata> 
   const { stdout } = await execFileAsync(
     "yt-dlp",
     ["-J", "--skip-download", `https://www.youtube.com/watch?v=${videoId}`],
-    { maxBuffer: MAX_METADATA_BUFFER }
+    { maxBuffer: MAX_METADATA_BUFFER, timeout: METADATA_TIMEOUT_MS }
   );
 
   const raw = JSON.parse(stdout) as {

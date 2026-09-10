@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { PLAYLIST_LISTING_TIMEOUT_MS } from "./timeouts";
 
 const execFileAsync = promisify(execFile);
 const MAX_METADATA_BUFFER = 20 * 1024 * 1024;
@@ -30,7 +31,7 @@ export async function listPlaylistVideos(playlistId: string, limit = 25): Promis
       "--skip-download",
       `https://www.youtube.com/playlist?list=${playlistId}`,
     ],
-    { maxBuffer: MAX_METADATA_BUFFER }
+    { maxBuffer: MAX_METADATA_BUFFER, timeout: PLAYLIST_LISTING_TIMEOUT_MS }
   );
 
   const raw = JSON.parse(stdout) as {

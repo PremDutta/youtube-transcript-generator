@@ -5,6 +5,9 @@
  * messages stay readable instead of dumping the whole blob.
  */
 export function describeExecError(err: unknown): string {
+  if (err && typeof err === "object" && "killed" in err && (err as { killed?: boolean }).killed) {
+    return "The command timed out.";
+  }
   if (err && typeof err === "object" && "stderr" in err) {
     const stderr = String((err as { stderr?: unknown }).stderr ?? "").trim();
     const lines = stderr.split("\n").map((l) => l.trim());

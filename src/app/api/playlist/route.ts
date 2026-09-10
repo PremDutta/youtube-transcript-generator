@@ -3,12 +3,27 @@ import { z } from "zod";
 import { extractPlaylistId } from "@/lib/youtube";
 import { getTranscript, type PlaylistVideoResult } from "@/lib/transcript";
 import { listPlaylistVideos, runWithConcurrencyLimit } from "@/lib/transcript/playlist";
+import { describeExecError } from "@/lib/transcript/execError";
+import { checkRateLimit, getClientKey } from "@/lib/rateLimit";
 
 const requestSchema = z.object({
   url: z.string().min(1, "A YouTube playlist URL is required."),
 });
 
+// A single request can fan out into up to 25 downstream yt-dlp/Whisper
+// calls, so this needs a much tighter cap than the single-video route.
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+
 export async function POST(request: Request) {
+  const rate = checkRateLimit(`playlist:${getClientKey(request)}`, RATE_LIMIT, RATE_WINDOW_MS);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again shortly." },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
 
@@ -55,7 +70,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error(err);
     return NextResponse.json(
-      { error: `Could not read this playlist: ${err instanceof Error ? err.message : String(err)}` },
+      { error: `Could not read this playlist: ${describeExecError(err)}` },
       { status: 422 }
     );
   }

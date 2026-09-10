@@ -6,6 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import OpenAI from "openai";
 import { describeExecError } from "./execError";
+import { AUDIO_DOWNLOAD_TIMEOUT_MS, WHISPER_API_TIMEOUT_MS } from "./timeouts";
 import { TranscriptUnavailableError, type TranscriptSegment } from "./types";
 
 const execFileAsync = promisify(execFile);
@@ -44,7 +45,7 @@ export async function transcribeWithWhisper(videoId: string): Promise<WhisperRes
       "-o",
       audioTemplate,
       `https://www.youtube.com/watch?v=${videoId}`,
-    ]);
+    ], { timeout: AUDIO_DOWNLOAD_TIMEOUT_MS });
 
     const files = await readdir(workDir);
     const audioFile = files.find((f) => f.startsWith("audio."));
@@ -52,7 +53,7 @@ export async function transcribeWithWhisper(videoId: string): Promise<WhisperRes
       throw new TranscriptUnavailableError("Audio download produced no output file.");
     }
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: WHISPER_API_TIMEOUT_MS });
     const transcription = await client.audio.transcriptions.create({
       file: createReadStream(path.join(workDir, audioFile)),
       model: "whisper-1",

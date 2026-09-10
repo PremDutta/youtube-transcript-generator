@@ -5,6 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { parseVtt } from "./vtt";
 import { describeExecError } from "./execError";
+import { CAPTIONS_TIMEOUT_MS } from "./timeouts";
 import type { TranscriptSegment } from "./types";
 
 const execFileAsync = promisify(execFile);
@@ -35,7 +36,7 @@ export async function fetchCaptions(
         "-o",
         path.join(workDir, "%(id)s.%(ext)s"),
         `https://www.youtube.com/watch?v=${videoId}`,
-      ]);
+      ], { timeout: CAPTIONS_TIMEOUT_MS });
     } catch (err) {
       // yt-dlp can exit non-zero on a non-fatal warning (e.g. a transient
       // 429 on a secondary request) after already writing the subtitle
