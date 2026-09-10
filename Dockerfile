@@ -31,10 +31,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Don't hardcode PORT — the host (Railway or otherwise) injects its own at
+# runtime and the standalone server reads process.env.PORT directly.
+#
+# HOSTNAME *does* need to be forced to 0.0.0.0: Docker auto-sets $HOSTNAME
+# to the container ID, and the standalone server does
+# `process.env.HOSTNAME || '0.0.0.0'` — so without this override it binds
+# to the container-ID hostname (loopback-only) instead of all interfaces,
+# and the platform's proxy gets "connection refused" even though the
+# process is genuinely running and logs look fine.
+ENV HOSTNAME="0.0.0.0"
 
-# Don't hardcode PORT/EXPOSE — the host (Railway or otherwise) injects its
-# own PORT at runtime, and the standalone server reads process.env.PORT
-# directly. A hardcoded value here previously caused Railway's static
-# Dockerfile inspection to route to the wrong port than the one the
-# container actually bound at runtime.
 CMD ["node", "server.js"]
