@@ -1,4 +1,37 @@
-import { existsSync } from "node:fs";
+import { existsSync, copyFileSync, chmodSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
+// Keyed by source path so tests using different env-configured paths
+// don't collide, and repeated calls for the same real deployment only
+// copy once per process.
+const writableCopyCache = new Map<string, string>();
+
+/**
+ * yt-dlp treats --cookies as a live cookie jar: it can try to write
+ * updated cookies back to the same file after a request. Secret-file
+ * mounts (Render, etc.) are read-only, so that write fails outright with
+ * EROFS and takes the whole extraction down with it — copying to a
+ * writable location once avoids that.
+ */
+function resolveWritableCookiesPath(sourcePath: string): string {
+  const cached = writableCopyCache.get(sourcePath);
+  if (cached) return cached;
+
+  // A guaranteed-unique directory per copy, rather than a deterministic
+  // counter-based name — a fixed name can collide with a stale leftover
+  // file from a previous process run (which is exactly how this bit us
+  // once already: copying onto an existing read-only leftover failed).
+  const dir = mkdtempSync(path.join(tmpdir(), "yt-cookies-"));
+  const writablePath = path.join(dir, "cookies.txt");
+  copyFileSync(sourcePath, writablePath);
+  // copyFileSync preserves the source's permission bits — a read-only
+  // secret-file mount produces a read-only copy too, so the write-back
+  // this whole function exists to avoid would still fail identically.
+  chmodSync(writablePath, 0o600);
+  writableCopyCache.set(sourcePath, writablePath);
+  return writablePath;
+}
 
 /**
  * YouTube increasingly rate-limits or bot-checks requests from shared/
@@ -14,7 +47,8 @@ import { existsSync } from "node:fs";
  */
 export function getCookieArgs(): string[] {
   const cookiesPath = process.env.YTDLP_COOKIES_PATH ?? "/etc/secrets/youtube-cookies.txt";
-  return existsSync(/* turbopackIgnore: true */ cookiesPath) ? ["--cookies", cookiesPath] : [];
+  if (!existsSync(/* turbopackIgnore: true */ cookiesPath)) return [];
+  return ["--cookies", resolveWritableCookiesPath(cookiesPath)];
 }
 
 /**
