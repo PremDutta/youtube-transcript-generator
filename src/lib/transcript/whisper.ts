@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 import OpenAI from "openai";
 import { describeExecError } from "./execError";
 import { AUDIO_DOWNLOAD_TIMEOUT_MS, WHISPER_API_TIMEOUT_MS } from "./timeouts";
-import { getCookieArgs } from "./cookies";
+import { getExtractionArgs } from "./cookies";
 import { TranscriptUnavailableError, type TranscriptSegment } from "./types";
 
 const execFileAsync = promisify(execFile);
@@ -45,7 +45,7 @@ export async function transcribeWithWhisper(videoId: string): Promise<WhisperRes
       "5",
       "-o",
       audioTemplate,
-      ...getCookieArgs(),
+      ...getExtractionArgs(),
       `https://www.youtube.com/watch?v=${videoId}`,
     ], { timeout: AUDIO_DOWNLOAD_TIMEOUT_MS });
 

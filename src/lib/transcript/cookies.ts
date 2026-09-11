@@ -16,3 +16,16 @@ export function getCookieArgs(): string[] {
   const cookiesPath = process.env.YTDLP_COOKIES_PATH ?? "/etc/secrets/youtube-cookies.txt";
   return existsSync(/* turbopackIgnore: true */ cookiesPath) ? ["--cookies", cookiesPath] : [];
 }
+
+/**
+ * Every yt-dlp call needs this. YouTube requires solving a JS signature
+ * challenge to resolve real (non-storyboard-only) formats — without it,
+ * yt-dlp falls back to "Only images are available for download" and
+ * errors out entirely. Harmless when no challenge is actually needed;
+ * required once a cookies file is present (the authenticated path hits
+ * this far more often than the anonymous one). Needs a JS runtime (Deno)
+ * on PATH — see the Dockerfile.
+ */
+export function getExtractionArgs(): string[] {
+  return ["--remote-components", "ejs:github", ...getCookieArgs()];
+}

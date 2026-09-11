@@ -20,12 +20,26 @@ ENV NODE_ENV=production
 # the Whisper fallback, audio download), ffmpeg for Whisper's audio
 # extraction step. Both are real OS packages here, unlike a serverless
 # platform where nothing can be installed at runtime.
+#
+# deno is required too: YouTube's newer anti-bot measures require solving
+# a JS signature challenge to resolve real (non-thumbnail-only) formats —
+# without a JS runtime, yt-dlp fails outright with "Requested format is
+# not available". This bites hardest once a cookies file is in play (the
+# authenticated extraction path hits the challenge far more often), but
+# is worth having unconditionally since YouTube is rolling this out more
+# broadly over time.
+ENV DENO_INSTALL=/usr/local
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 \
       python3-pip \
       ffmpeg \
       ca-certificates \
+      curl \
+      unzip \
     && pip3 install --no-cache-dir --break-system-packages yt-dlp \
+    && curl -fsSL https://deno.land/install.sh | sh \
+    && apt-get purge -y curl unzip \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.next/standalone ./
