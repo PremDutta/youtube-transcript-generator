@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { parseVtt } from "./vtt";
 import { describeExecError } from "./execError";
 import { CAPTIONS_TIMEOUT_MS } from "./timeouts";
+import { getCookieArgs } from "./cookies";
 import type { TranscriptSegment } from "./types";
 
 const execFileAsync = promisify(execFile);
@@ -35,6 +36,7 @@ export async function fetchCaptions(
         lang,
         "-o",
         path.join(workDir, "%(id)s.%(ext)s"),
+        ...getCookieArgs(),
         `https://www.youtube.com/watch?v=${videoId}`,
       ], { timeout: CAPTIONS_TIMEOUT_MS });
     } catch (err) {
