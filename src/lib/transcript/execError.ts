@@ -22,3 +22,23 @@ export function describeExecError(err: unknown): string {
   }
   return err instanceof Error ? err.message : String(err);
 }
+
+/**
+ * Detects a YouTube-side rate limit (HTTP 429) specifically, as opposed
+ * to "this video genuinely has no captions" or some other failure — the
+ * two look identical (both are just a non-zero yt-dlp exit) unless you
+ * check stderr for this. Worth distinguishing: a 429 is worth retrying
+ * and worth telling the user "try again shortly" rather than the
+ * misleading "no captions exist" message.
+ */
+export function isRateLimitError(err: unknown): boolean {
+  if (err && typeof err === "object" && "stderr" in err) {
+    const stderr = String((err as { stderr?: unknown }).stderr ?? "");
+    return /HTTP Error 429|Too Many Requests/i.test(stderr);
+  }
+  return false;
+}
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
