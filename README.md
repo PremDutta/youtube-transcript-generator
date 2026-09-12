@@ -92,6 +92,7 @@ src/
   app/
     api/transcript/route.ts    # POST { url } -> TranscriptResult
     api/playlist/route.ts      # POST { url } -> { playlistTitle, videos: PlaylistVideoResult[] }
+    api/health/route.ts        # GET -> { status: "ok" } (used for host healthchecks)
     page.tsx                   # renders <TranscriptApp />
   components/
     TranscriptApp.tsx          # client UI: input, single-video or playlist result
@@ -126,4 +127,16 @@ src/
   own play button.
 - **Playlist cap**: 25 videos per playlist request, to bound how long one
   request runs and (on the Whisper path) how much it could cost.
+- **Shared-IP rate limiting on free hosting tiers**: YouTube's own
+  rate limit on the caption-download endpoint applies per-IP, and free
+  hosting tiers (Render's free plan included) share a small pool of
+  outbound IPs across many unrelated apps. That pool can already be
+  over quota before your own app has made a single request, which
+  shows up as an immediate 429 even from a fresh cold start. This is
+  YouTube-side and outside the app's control; a cookies file (see
+  `YTDLP_COOKIES_PATH` below) reduces but does not eliminate it, and a
+  host with a dedicated/residential IP would avoid it entirely. The
+  app now retries once with backoff and returns a clear "try again in
+  a few minutes" error instead of a misleading fallback message when
+  this happens.
 
